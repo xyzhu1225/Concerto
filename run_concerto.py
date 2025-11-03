@@ -207,23 +207,29 @@ if __name__ == "__main__":
     seg_head.eval()
     with torch.inference_mode():
         for key in point.keys():
-            if isinstance(point[key], torch.Tensor) and "cuda" in device:
-                point[key] = point[key].to(device, non_blocking=True)
+            if isinstance(point[key], torch.Tensor):
+                point[key] = point[key].to(args.device, non_blocking=True)
+
         point = model(point)
         while "pooling_parent" in point.keys():
-            assert "pooling_inverse" in point.keys()
             parent = point.pop("pooling_parent")
             inverse = point.pop("pooling_inverse")
             parent.feat = torch.cat([parent.feat, point.feat[inverse]], dim=-1)
             point = parent
+
         feat = point.feat
         seg_logits = seg_head(feat)
         pred = seg_logits.argmax(dim=-1).data.cpu().numpy()
-        color = np.array(CLASS_COLOR_20)[pred]
+        inverse = point["inverse"].cpu().numpy()
+        pred_full = pred[inverse]
 
-    # Visualize & Save
+        color_full = np.array(CLASS_COLOR_20)[pred_full]
+
+    # Save colored .ply
     pcd = o3d.geometry.PointCloud()
-    pcd.points = o3d.utility.Vector3dVector(point.coord.cpu().detach().numpy())
-    pcd.colors = o3d.utility.Vector3dVector(color / 255.0)
-    o3d.io.write_point_cloud(f"{args.output_path}.ply", pcd)
-    print(f"Saved: {args.output_path}.ply")
+    pcd.points = o3d.utility.Vector3dVector(original_coord)
+    pcd.colors = o3d.utility.Vector3dVector(color_full / 255)
+    ply_path = f"{args.output_path}.ply"
+    npz_path = f"{args.output_path}_pred.npz"
+    o3d.io.write_point_cloud(ply_path, pcd)
+    np.savez_compressed(npz_path, pred_full=pred_full)

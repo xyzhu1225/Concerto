@@ -1,4 +1,4 @@
-torch-scatter --find-links https://data.pyg.org/whl/torch-2.5.0+cu124.html
+torch-scatter --find-links https://data.pyg.org/whl/torch-2.5.0+cu121.html
 git+https://github.com/Dao-AILab/flash-attention.git
 spconv-cu124 
 opencv-python
