@@ -231,5 +231,7 @@ if __name__ == "__main__":
     pcd.colors = o3d.utility.Vector3dVector(color_full / 255)
     ply_path = f"{args.output_path}.ply"
     npz_path = f"{args.output_path}_pred.npz"
+    print(f"Saving segmented point cloud to {ply_path} ...")
+    print(f"Saving prediction result npz to {npz_path} ...")
     o3d.io.write_point_cloud(ply_path, pcd)
     np.savez_compressed(npz_path, pred_full=pred_full)
